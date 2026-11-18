@@ -1,0 +1,191 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidVirtualInstance(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 50 &&
+             data.profileMode in ['GAME_AFK', 'WEB_FARM', 'SECURE_BROWSE', 'DOWNLOAD_NODE'] &&
+             data.resolutionPreset in ['HD_720', 'FHD_1080', 'QHD_1440', 'DESKTOP_16_9'] &&
+             data.userAgentMode in ['ANDROID_MOBILE', 'DESKTOP_CHROME', 'TABLET_PIXEL'] &&
+             data.targetUrl is string && data.targetUrl.size() >= 1 && data.targetUrl.size() <= 500 &&
+             data.status in ['STOPPED', 'RUNNING', 'AFK_BACKGROUND'] &&
+             data.assignedMacroId is string && data.assignedMacroId.size() <= 128 &&
+             data.keepAwake is bool &&
+             data.adShieldEnabled is bool &&
+             data.httpsOnly is bool &&
+             data.totalRunSeconds is int && data.totalRunSeconds >= 0 && data.totalRunSeconds <= 999999999 &&
+             data.cycleCount is int && data.cycleCount >= 0 && data.cycleCount <= 999999999 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAfkMacro(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 50 &&
+             data.description is string && data.description.size() <= 200 &&
+             data.loopForever is bool &&
+             data.maxLoops is int && data.maxLoops >= 1 && data.maxLoops <= 100000 &&
+             data.intervalMs is int && data.intervalMs >= 200 && data.intervalMs <= 3600000 &&
+             data.steps is list && data.steps.size() <= 30 &&
+             (data.steps.size() == 0 || data.steps[0] is string) &&
+             data.runCount is int && data.runCount >= 0 && data.runCount <= 999999999 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSecureBookmark(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 60 &&
+             data.url is string && data.url.size() >= 1 && data.url.size() <= 500 &&
+             data.category in ['GAMING', 'CLOUD', 'TOOLS', 'GENERAL'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidDownloadRecord(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.userId == request.auth.uid &&
+             data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 150 &&
+             data.url is string && data.url.size() >= 1 && data.url.size() <= 500 &&
+             data.mimeType is string && data.mimeType.size() <= 100 &&
+             data.sizeBytes is int && data.sizeBytes >= 0 && data.sizeBytes <= 10737418240 &&
+             data.status in ['QUEUED', 'DOWNLOADING', 'COMPLETED', 'FAILED'] &&
+             data.localUri is string && data.localUri.size() <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/instances/{instanceId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(instanceId);
+      allow create: if isOwner(userId) &&
+                       isValidId(instanceId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'name', 'profileMode', 'resolutionPreset', 'userAgentMode',
+                         'targetUrl', 'status', 'assignedMacroId', 'keepAwake',
+                         'adShieldEnabled', 'httpsOnly', 'totalRunSeconds', 'cycleCount',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'profileMode', 'resolutionPreset', 'userAgentMode',
+                         'targetUrl', 'status', 'assignedMacroId', 'keepAwake',
+                         'adShieldEnabled', 'httpsOnly', 'totalRunSeconds', 'cycleCount',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidVirtualInstance(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(instanceId) &&
+                       isValidVirtualInstance(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'profileMode', 'resolutionPreset', 'userAgentMode',
+                         'targetUrl', 'status', 'assignedMacroId', 'keepAwake',
+                         'adShieldEnabled', 'httpsOnly', 'totalRunSeconds', 'cycleCount',
+                         'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(instanceId);
+    }
+
+    match /users/{userId}/macros/{macroId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(macroId);
+      allow create: if isOwner(userId) &&
+                       isValidId(macroId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'name', 'description', 'loopForever', 'maxLoops',
+                         'intervalMs', 'steps', 'runCount', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'description', 'loopForever', 'maxLoops',
+                         'intervalMs', 'steps', 'runCount', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidAfkMacro(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(macroId) &&
+                       isValidAfkMacro(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'description', 'loopForever', 'maxLoops',
+                         'intervalMs', 'steps', 'runCount', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(macroId);
+    }
+
+    match /users/{userId}/bookmarks/{bookmarkId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(bookmarkId);
+      allow create: if isOwner(userId) &&
+                       isValidId(bookmarkId) &&
+                       incoming().keys().hasAll(['userId', 'title', 'url', 'category', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'title', 'url', 'category', 'createdAt', 'updatedAt']) &&
+                       isValidSecureBookmark(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(bookmarkId) &&
+                       isValidSecureBookmark(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['title', 'url', 'category', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(bookmarkId);
+    }
+
+    match /users/{userId}/downloads/{downloadId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(downloadId);
+      allow create: if isOwner(userId) &&
+                       isValidId(downloadId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'fileName', 'url', 'mimeType', 'sizeBytes',
+                         'status', 'localUri', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'fileName', 'url', 'mimeType', 'sizeBytes',
+                         'status', 'localUri', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidDownloadRecord(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(downloadId) &&
+                       isValidDownloadRecord(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'fileName', 'mimeType', 'sizeBytes', 'status', 'localUri', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(downloadId);
+    }
+  }
+}

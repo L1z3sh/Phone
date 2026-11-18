@@ -1,0 +1,6 @@
+{
+  "name": "AetherPhone",
+  "description": "Virtual sandbox phone workspace for Android with multi-instance AFK macro automation, persistent foreground runtime, network telemetry, and secure web browsing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

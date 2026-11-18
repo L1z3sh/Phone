@@ -1,0 +1,265 @@
+{
+  "entities": {
+    "VirtualInstance": {
+      "title": "VirtualInstance",
+      "description": "A user-configured virtual sandbox phone instance for AFK automation, web gaming, or secure browsing.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the virtual phone instance (1-50 chars)."
+        },
+        "profileMode": {
+          "type": "string",
+          "enum": ["GAME_AFK", "WEB_FARM", "SECURE_BROWSE", "DOWNLOAD_NODE"],
+          "description": "Operational profile of the virtual workspace."
+        },
+        "resolutionPreset": {
+          "type": "string",
+          "enum": ["HD_720", "FHD_1080", "QHD_1440", "DESKTOP_16_9"],
+          "description": "Simulated viewport resolution preset."
+        },
+        "userAgentMode": {
+          "type": "string",
+          "enum": ["ANDROID_MOBILE", "DESKTOP_CHROME", "TABLET_PIXEL"],
+          "description": "Browser user-agent profile for the sandbox WebView."
+        },
+        "targetUrl": {
+          "type": "string",
+          "description": "Target web app or game URL loaded in the virtual instance."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["STOPPED", "RUNNING", "AFK_BACKGROUND"],
+          "description": "Current runtime state of the instance."
+        },
+        "assignedMacroId": {
+          "type": "string",
+          "description": "Optional macro document ID assigned to this instance."
+        },
+        "keepAwake": {
+          "type": "boolean",
+          "description": "Whether foreground keep-awake service persistence is requested."
+        },
+        "adShieldEnabled": {
+          "type": "boolean",
+          "description": "Whether tracker and ad domain filtering is enabled."
+        },
+        "httpsOnly": {
+          "type": "boolean",
+          "description": "Whether HTTP URLs are upgraded to HTTPS automatically."
+        },
+        "totalRunSeconds": {
+          "type": "integer",
+          "description": "Accumulated AFK uptime in seconds."
+        },
+        "cycleCount": {
+          "type": "integer",
+          "description": "Completed macro automation cycles."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp (clients submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "profileMode",
+        "resolutionPreset",
+        "userAgentMode",
+        "targetUrl",
+        "status",
+        "assignedMacroId",
+        "keepAwake",
+        "adShieldEnabled",
+        "httpsOnly",
+        "totalRunSeconds",
+        "cycleCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AfkMacro": {
+      "title": "AfkMacro",
+      "description": "Custom batch automation macro sequence executable on virtual instances.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Macro title (1-50 chars)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Macro notes or purpose (0-200 chars)."
+        },
+        "loopForever": {
+          "type": "boolean",
+          "description": "Whether the macro repeats indefinitely during AFK sessions."
+        },
+        "maxLoops": {
+          "type": "integer",
+          "description": "Maximum loop iterations when loopForever is false."
+        },
+        "intervalMs": {
+          "type": "integer",
+          "description": "Cooldown delay in milliseconds between macro loops."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Ordered list of serialized macro steps (max 30)."
+        },
+        "runCount": {
+          "type": "integer",
+          "description": "Total completed executions of this macro."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp (clients submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "description",
+        "loopForever",
+        "maxLoops",
+        "intervalMs",
+        "steps",
+        "runCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SecureBookmark": {
+      "title": "SecureBookmark",
+      "description": "Saved bookmark for the secure sandbox browser.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Bookmark title (1-60 chars)."
+        },
+        "url": {
+          "type": "string",
+          "description": "Target URL (1-500 chars)."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["GAMING", "CLOUD", "TOOLS", "GENERAL"],
+          "description": "Bookmark category."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp (clients submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "title", "url", "category", "createdAt", "updatedAt"]
+    },
+    "DownloadRecord": {
+      "title": "DownloadRecord",
+      "description": "Tracked file download entry initiated from the secure sandbox browser or direct URL downloader.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID."
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Saved file name (1-150 chars)."
+        },
+        "url": {
+          "type": "string",
+          "description": "Source URL (1-500 chars)."
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type string (0-100 chars)."
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "description": "File size in bytes."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["QUEUED", "DOWNLOADING", "COMPLETED", "FAILED"],
+          "description": "Current download status."
+        },
+        "localUri": {
+          "type": "string",
+          "description": "Local content URI or path reference."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp (clients submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "fileName",
+        "url",
+        "mimeType",
+        "sizeBytes",
+        "status",
+        "localUri",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/instances/{instanceId}": {
+      "schema": { "$ref": "#/entities/VirtualInstance" },
+      "description": "User-owned virtual phone instances."
+    },
+    "/users/{userId}/macros/{macroId}": {
+      "schema": { "$ref": "#/entities/AfkMacro" },
+      "description": "User-owned custom AFK batch macros."
+    },
+    "/users/{userId}/bookmarks/{bookmarkId}": {
+      "schema": { "$ref": "#/entities/SecureBookmark" },
+      "description": "User-owned secure browser bookmarks."
+    },
+    "/users/{userId}/downloads/{downloadId}": {
+      "schema": { "$ref": "#/entities/DownloadRecord" },
+      "description": "User-owned file download records."
+    }
+  }
+}

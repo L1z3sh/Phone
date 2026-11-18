@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">AetherPhone</string>
+    <string name="sign_in_headline">Virtual Cloud Workspace</string>
+    <string name="sign_in_subtitle">Run unlimited AFK sandbox instances, automated batch macros, and encrypted web downloads synced to your account.</string>
+    <string name="sign_in_button">Sign in with Google</string>
+    <string name="nav_cluster">Cluster</string>
+    <string name="nav_viewport">Viewport</string>
+    <string name="nav_macros">Macros</string>
+    <string name="nav_network">Net &amp; Files</string>
+    <string name="afk_service_channel_name">AFK Virtual Instances</string>
+    <string name="afk_service_channel_desc">Keeps active virtual sandbox instances and batch macros running in the background.</string>
+    <string name="action_create_instance">New Instance</string>
+    <string name="action_create_macro">New Macro</string>
+    <string name="action_batch_run">Batch Run</string>
+    <string name="action_stop_all">Stop All</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+</resources>
